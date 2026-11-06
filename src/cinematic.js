@@ -99,6 +99,8 @@ function windReactions(ctx,w,h,t,wind){
 
 export function cinematicImpact(ctx,w,h,{board,design,shot,timing,duel},drawMenko){
  const elapsed=timing.simulation,origin={x:w*.5,y:h*.76};
+ const duelOffset=duel?{x:(duel.target.x-shot.origin.x)*w*1.45,y:(duel.target.y-shot.origin.y)*(shot.aspect||1.35)*w*1.45*.5}:null;
+ if(duel){origin.x-=duelOffset.x/2;origin.y=h*.7-duelOffset.y/2;}
  ctx.save();
  if(timing.landed&&elapsed<420){const strength=7*(1-elapsed/420);ctx.translate(Math.sin(elapsed*.18)*strength,Math.cos(elapsed*.14)*strength*.65);}
  if(yard)cover(ctx,yard,w,h);else fallbackYard(ctx,w,h);
@@ -111,6 +113,7 @@ export function cinematicImpact(ctx,w,h,{board,design,shot,timing,duel},drawMenk
   const depth=clamp(1.5+(shot.origin.y-card.y)*2.3,.65,2.8),scale=1.2/depth;
   const hit=duel?(shot.flipped?{delay:0}:null):hits.get(card.id);
   const p=hit?clamp((elapsed-hit.delay*.6)/1250,0,1):0,air=Math.sin(p*Math.PI);
+  if(duel)return{card,hit,p,air,scale:1,depth:1,x:origin.x+duelOffset.x,y:origin.y+duelOffset.y-air*h*.3,r:w*.16*.115/.11};
   return{card,hit,p,air,scale,depth,x:origin.x+(card.x-shot.origin.x)*w*1.7*scale+(card.x<shot.origin.x?-1:1)*air*w*.22,y:h*.43+h*.38/depth-air*h*(.28+(card.id%5)*.045),r:w*.046*scale*(1+air*(card.id%4===0?2.1:.6))};
  }).sort((a,b)=>b.depth-a.depth);
  if(timing.landed){dust(ctx,w,h,origin.x,origin.y,elapsed);shock(ctx,w,h,origin.x,origin.y,elapsed,shot.wind);}
@@ -122,7 +125,7 @@ export function cinematicImpact(ctx,w,h,{board,design,shot,timing,duel},drawMenk
   thickCard(ctx,d,x,y,r,card.angle+p*(card.id%2?2:-2),tilt,spin<0?'back':'front',drawMenko,duel?null:`${card.color}-${card.id%5}-${card.id%7===0}`);
  }
  // The player's actual hand-cut silhouette and drawing are the hero of the shot.
- const flight=timing.flight,r=w*(.26+(1-flight)*.12),heroY=origin.y-(1-flight)*h*.66;
+ const flight=timing.flight,r=w*((duel?.16:.26)+(1-flight)*.12),heroY=origin.y-(1-flight)*h*.66;
  ctx.save();ctx.fillStyle='#251b164d';ctx.beginPath();ctx.ellipse(origin.x+8,origin.y+18,r*1.08,r*.32,.08,0,Math.PI*2);ctx.fill();ctx.restore();
  thickCard(ctx,design,origin.x,heroY,r,-.14+(1-flight)*.5,.48+(1-flight)*.3,'front',drawMenko,null);
  if(timing.landed){
