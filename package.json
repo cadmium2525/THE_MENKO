@@ -1,1 +1,1 @@
-{"name":"the-menko","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node scripts/serve.mjs","test":"node --test tests/*.test.mjs","build":"node scripts/build.mjs","audio":"node scripts/make-audio.mjs"}}
+{"name":"the-menko","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node scripts/serve.mjs","test":"node --test tests/*.test.mjs","build":"node scripts/build.mjs","audio":"node scripts/make-audio.mjs"},"dependencies":{"three":"0.180.0"},"devDependencies":{"esbuild":"0.25.10"}}

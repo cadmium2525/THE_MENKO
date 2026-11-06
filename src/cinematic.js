@@ -88,7 +88,8 @@ function windReactions(ctx,w,h,t,wind){
   ctx.save();ctx.translate(w*(.9-p*1.05),h*(.4-p*.28));ctx.rotate(-p*6);ctx.fillStyle='#cf3c27';ctx.beginPath();ctx.moveTo(-31,0);ctx.quadraticCurveTo(0,p>.25?31:-37,31,0);ctx.lineTo(0,12);ctx.closePath();ctx.fill();ctx.strokeStyle='#332c23';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,4);ctx.lineTo(0,37);ctx.arc(6,37,6,Math.PI,0,true);ctx.stroke();ctx.restore();
  }
  if(tier>=2){
-  ctx.save();ctx.translate(w*(.16+p*.96),h*(.5-Math.sin(p*Math.PI)*.36));ctx.rotate(p*11);ctx.fillStyle='#4b3225';ctx.beginPath();ctx.ellipse(0,0,27,10,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-15,-23,30,23);ctx.fillStyle='#ce9a52';ctx.fillRect(-15,-7,30,5);ctx.restore();
+  ctx.save();ctx.translate(w*.25,h*.39);ctx.fillStyle='#d5a65d';ctx.fillRect(-15,15,30,38);ctx.fillStyle='#edbc8b';ctx.beginPath();ctx.ellipse(0,0,19,23,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#29251f';ctx.fillRect(-9,-3,4,4);ctx.fillRect(5,-3,4,4);ctx.beginPath();ctx.ellipse(0,10,5,7,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.save();ctx.translate(w*(.25+p*.45),h*(.35-Math.sin(p*Math.PI)*.2));ctx.rotate(p*9);ctx.fillStyle='#3c2c22';ctx.beginPath();ctx.ellipse(0,0,21,12,0,0,Math.PI*2);ctx.fill();ctx.restore();
  }
  if(tier>=3){
   const split=Math.sin(p*Math.PI)*w*.28;
@@ -113,7 +114,7 @@ export function cinematicImpact(ctx,w,h,{board,design,shot,timing,duel},drawMenk
   const depth=clamp(1.5+(shot.origin.y-card.y)*2.3,.65,2.8),scale=1.2/depth;
   const hit=duel?(shot.flipped?{delay:0}:null):hits.get(card.id);
   const p=hit?clamp((elapsed-hit.delay*.6)/1250,0,1):0,air=Math.sin(p*Math.PI);
-  if(duel)return{card,hit,p,air,scale:1,depth:1,x:origin.x+duelOffset.x,y:origin.y+duelOffset.y-air*h*.3,r:w*.16*.115/.11};
+  if(duel)return{card,hit,p,air,scale:1,depth:1,x:origin.x+duelOffset.x,y:origin.y+duelOffset.y-air*h*.3,r:w*.16*.115/.11*duel.defender.size/.8};
   return{card,hit,p,air,scale,depth,x:origin.x+(card.x-shot.origin.x)*w*1.7*scale+(card.x<shot.origin.x?-1:1)*air*w*.22,y:h*.43+h*.38/depth-air*h*(.28+(card.id%5)*.045),r:w*.046*scale*(1+air*(card.id%4===0?2.1:.6))};
  }).sort((a,b)=>b.depth-a.depth);
  if(timing.landed){dust(ctx,w,h,origin.x,origin.y,elapsed);shock(ctx,w,h,origin.x,origin.y,elapsed,shot.wind);}
@@ -125,7 +126,7 @@ export function cinematicImpact(ctx,w,h,{board,design,shot,timing,duel},drawMenk
   thickCard(ctx,d,x,y,r,card.angle+p*(card.id%2?2:-2),tilt,spin<0?'back':'front',drawMenko,duel?null:`${card.color}-${card.id%5}-${card.id%7===0}`);
  }
  // The player's actual hand-cut silhouette and drawing are the hero of the shot.
- const flight=timing.flight,r=w*((duel?.16:.26)+(1-flight)*.12),heroY=origin.y-(1-flight)*h*.66;
+ const flight=timing.flight,r=w*((duel?.16*design.size/.8:.26)+(1-flight)*.12),heroY=origin.y-(1-flight)*h*.66;
  ctx.save();ctx.fillStyle='#251b164d';ctx.beginPath();ctx.ellipse(origin.x+8,origin.y+18,r*1.08,r*.32,.08,0,Math.PI*2);ctx.fill();ctx.restore();
  thickCard(ctx,design,origin.x,heroY,r,-.14+(1-flight)*.5,.48+(1-flight)*.3,'front',drawMenko,null);
  if(timing.landed){

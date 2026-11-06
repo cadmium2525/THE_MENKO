@@ -27,3 +27,10 @@ test('CPU aims beside its opponent, including near the board edge',()=>{
   assert.ok(duelShot(a,d,aim,target,0,1.5).flipped);
  }
 });
+
+test('larger duel cards require more separation than the default pair',()=>{
+ const target={x:.5,y:.5},aim={x:.75,y:.5},normal=createDesign(),large={...createDesign(),size:1};
+ assert.equal(duelShot(normal,normal,aim,target).flipped,true);
+ assert.equal(duelShot(large,large,aim,target).blocked,true);
+ assert.equal(duelShot(large,large,aim,target).flipped,false);
+});

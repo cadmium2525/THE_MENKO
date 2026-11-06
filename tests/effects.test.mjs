@@ -9,7 +9,7 @@ test('five waves end at 640 cards; no sixth wave can be created',()=>{
  assert.ok(SAW_DURATION>=800&&SAW_DURATION<1500);
 });
 test('four wind reactions use consistent thresholds and labels',()=>{
- assert.deepEqual([0,40,65,85].map(w=>windPresentation(w).reaction),['綿毛','傘','帽子','雲']);
+ assert.deepEqual([0,40,65,85].map(w=>windPresentation(w).reaction),['綿毛','傘','カツラ','雲']);
  assert.deepEqual([39,64,84,100].map(w=>windPresentation(w).tier),[0,1,2,3]);
 });
 test('descent slows before impact; the scene clock freezes during hit-stop',()=>{

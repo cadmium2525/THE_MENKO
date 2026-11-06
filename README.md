@@ -24,7 +24,8 @@
 ## 構成
 
 - `src/model.js`：輪郭検証、性能、無双の連鎖、対決判定。描画から独立。
-- `src/render.js`：Canvas描画。紙、メンコ、工作机、路地、風圧の演出。
+- `src/three-view.js`：Three.jsによる3Dの工作・完成品・対戦・風圧リアクション。描画状態とゲーム判定を分離。
+- `src/render.js`：手描き編集、メンコの表裏テクスチャ、軽量な代替描画。
 - `src/app.js`：画面遷移、入力、保存、対戦進行。
 - `src/effects.js`：着弾のスロー・ヒットストップと、局所消去の描画。
 - `src/cinematic.js`：地面すれすれの着弾カメラ、厚み付きの飛散メンコ、火花・土煙・衝撃波、風圧4段階の反応。
@@ -56,7 +57,7 @@ npm test
 npm run build
 ```
 
-Playwrightの操作テストは `scripts/playtest.mjs` と `scripts/edge-cases.mjs`。PlaywrightとEdgeが必要です。通常はプロジェクトにインストールしたPlaywrightを読み込みます。共用ランタイムを使う場合は `PLAYWRIGHT_PACKAGE_JSON` にそのPlaywrightのpackage.jsonの絶対パスを指定できます。公開版を検証する場合は `MENKO_TEST_URL` に公開URLを指定してください。
+Playwrightの操作テストは `scripts/playtest.mjs`、`scripts/edge-cases.mjs`、`scripts/duel-check.mjs`、`scripts/three-check.mjs`。PlaywrightとEdgeが必要です。通常はプロジェクトにインストールしたPlaywrightを読み込みます。共用ランタイムを使う場合は `PLAYWRIGHT_PACKAGE_JSON` にそのPlaywrightのpackage.jsonの絶対パスを指定できます。公開版を検証する場合は `MENKO_TEST_URL` に公開URLを指定してください。
 
 ## GitHub Pages
 
@@ -64,4 +65,14 @@ Playwrightの操作テストは `scripts/playtest.mjs` と `scripts/edge-cases.m
 
 別の配信環境では `npm run build` が出力する `dist/` の内容を配置してください。相対パスで動くため、サブディレクトリ配信に対応しています。
 
-着弾演出は共通の1シーケンスで、直前のスロー→130ms停止→吹き飛びを描画します。風圧の反応は4段階（綿毛／傘／帽子／雲）。強い段階では弱い段階の反応も重なります。地面すれすれの背景には生成画像を使い、メンコはユーザーの輪郭と絵をCanvasで描画しています。背景の生成方法とプロンプトは [assets/environment/PROVENANCE.md](assets/environment/PROVENANCE.md) に記録しています。スマートフォン実機でのSafari検証は未実施です。
+## 3D描画
+
+Three.js 0.180.0を同梱し、外部CDNに依存せず動きます。輪郭を厚み付きの立体へ変換し、表裏のラクガキをテクスチャとして貼ります。工作の切断、ホーム、完成品、対戦は3D、輪郭や絵を描く操作面は描きやすい2Dです。保存済みのメンコはそのまま利用できます。
+
+着弾はスロー→130ms停止→火花・土煙・衝撃波→立体のメンコが回転して飛散。風圧は4段階（綿毛／傘が反転／おっさんのカツラが飛ぶ／雲が割れる）です。強い段階では前の反応も重なり、カメラが観客のリアクションへ寄ります。
+
+描画解像度は端末の画素比1.5倍まで、最終ウェーブも最大176グループを描画します。演出軽減ではカメラ移動と風圧リアクションの動きを抑えます。WebGLを利用できない場合はCanvasへ切り替え、コンテキスト復帰後は3Dを再構築します。飛散はゲーム判定に同期するアニメーションで、流体や剛体の厳密な物理シミュレーションではありません。
+
+3D環境と観客はコードから生成しています。以前の生成背景は代替描画に使用します。[背景の生成記録](assets/environment/PROVENANCE.md)。Three.jsのライセンスは `assets/vendor/THREE-LICENSE.txt` に同梱しています。ライブラリを更新する場合は `npm ci` 後に `node scripts/vendor-three.mjs` で配信ファイルを生成します。
+
+スマートフォン実機でのSafari検証は未実施です。

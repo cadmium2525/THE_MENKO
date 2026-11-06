@@ -5,7 +5,7 @@ export function windPresentation(wind) {
  return [
   {tier:0,name:'ふわり、そよ風',reaction:'綿毛',description:'綿毛まで、ふわり。'},
   {tier:1,name:'ひっくり返る突風',reaction:'傘',description:'となりの傘が、ひっくり返った。'},
-  {tier:2,name:'超暴風',reaction:'帽子',description:'おっと、帽子まで飛んでった。'},
+  {tier:2,name:'超暴風',reaction:'カツラ',description:'おっさんのカツラまで、飛んでった！'},
   {tier:3,name:'伝説の紙嵐',reaction:'雲',description:'雲まで、まっぷたつ。'}
  ][tier];
 }
