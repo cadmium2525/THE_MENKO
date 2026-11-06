@@ -22,7 +22,7 @@ elements.get('dialog').open=false;
 const storage=new Map();
 const env={console,crypto:webcrypto,devicePixelRatio:1,matchMedia:()=>({matches:false}),performance:{now:()=>clock},navigator:{},setTimeout:()=>1,clearTimeout:noop,scrollTo:noop,addEventListener:noop,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{hidden:false,body:{classList:{toggle:noop}},addEventListener:noop,querySelector:s=>s.startsWith('#')?elements.get(s.slice(1)):element(),createElement:tag=>element('',tag)},requestAnimationFrame:fn=>{frames.set(++sequence,fn);return sequence;},cancelAnimationFrame:id=>frames.delete(id)};
 env.window=env;
-let source='';for(const file of ['model','effects','render','audio','app'])source+=(await readFile('src/'+file+'.js','utf8')).replace(/^import .*;\r?\n/gm,'').replace(/^export /gm,'')+'\n';
+let source='';for(const file of ['model','effects','cinematic','render','audio','app'])source+=(await readFile('src/'+file+'.js','utf8')).replace(/^import .*;\r?\n/gm,'').replace(/^export /gm,'')+'\n';
 source=source.replace("new URL('../assets/audio/'+name+'.wav',import.meta.url)","'unused.wav'");
 runInNewContext(source+'\nglobalThis.hooks={state,action,fire,finishShot};',env);
 const {state,action,fire,finishShot}=env.hooks;

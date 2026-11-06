@@ -1,12 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {impactFrame,paintInk,SAW_DURATION} from '../src/effects.js';
+import {impactFrame,paintInk,SAW_DURATION,windPresentation} from '../src/effects.js';
 import {MAX_WAVES,WAVE_COUNTS,makeBoard,createDesign,isDesign} from '../src/model.js';
 
 test('five waves end at 640 cards; no sixth wave can be created',()=>{
  assert.equal(MAX_WAVES,5);assert.deepEqual(WAVE_COUNTS,[64,128,240,400,640]);
  assert.equal(makeBoard(6).wave,5);assert.equal(makeBoard(6).total,640);
  assert.ok(SAW_DURATION>=800&&SAW_DURATION<1500);
+});
+test('four wind reactions use consistent thresholds and labels',()=>{
+ assert.deepEqual([0,40,65,85].map(w=>windPresentation(w).reaction),['綿毛','傘','帽子','雲']);
+ assert.deepEqual([39,64,84,100].map(w=>windPresentation(w).tier),[0,1,2,3]);
 });
 test('descent slows before impact; the scene clock freezes during hit-stop',()=>{
  const fast=(impactFrame(140).flight-impactFrame(40).flight)/100;

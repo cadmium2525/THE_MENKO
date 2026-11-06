@@ -26,6 +26,7 @@
 - `src/render.js`：Canvas描画。紙、メンコ、工作机、路地、風圧の演出。
 - `src/app.js`：画面遷移、入力、保存、対戦進行。
 - `src/effects.js`：着弾のスロー・ヒットストップと、局所消去の描画。
+- `src/cinematic.js`：地面すれすれの着弾カメラ、厚み付きの飛散メンコ、火花・土煙・衝撃波、風圧4段階の反応。
 - `src/audio.js`：ユーザー操作後の音声再生とミュート。
 - `audio-source/`：かなでる用の楽曲・効果音JSON。
 - `assets/audio/`：生成済みWAV。再生成なしで遊べます。
@@ -62,4 +63,4 @@ Playwrightの操作テストは `scripts/playtest.mjs` と `scripts/edge-cases.m
 
 別の配信環境では `npm run build` が出力する `dist/` の内容を配置してください。相対パスで動くため、サブディレクトリ配信に対応しています。
 
-画像生成は使わず、編集できるメンコと背景をCanvasで直接描画しています。スマートフォン実機でのSafari検証は未実施です。
+着弾演出は共通の1シーケンスで、直前のスロー→130ms停止→吹き飛びを描画します。風圧の反応は4段階（綿毛／傘／帽子／雲）。強い段階では弱い段階の反応も重なります。地面すれすれの背景には生成画像を使い、メンコはユーザーの輪郭と絵をCanvasで描画しています。背景の生成方法とプロンプトは [assets/environment/PROVENANCE.md](assets/environment/PROVENANCE.md) に記録しています。スマートフォン実機でのSafari検証は未実施です。
