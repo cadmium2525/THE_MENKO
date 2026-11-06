@@ -1,0 +1,7 @@
+tools/
+node_modules/
+dist/
+test-results/
+*.log
+THE-MENKO.html
+THE-MENKO-pages.zip
