@@ -1,16 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {impactFrame,paintInk,SAW_DURATION,windPresentation} from '../src/effects.js';
-import {MAX_WAVES,WAVE_COUNTS,makeBoard,createDesign,isDesign} from '../src/model.js';
+import {impactFrame,paintInk,SAW_DURATION,windPresentation,windDuration,windCaption} from '../src/effects.js';
+import {MAX_WAVES,WAVE_COUNTS,makeBoard,createDesign,isDesign,simulateShot} from '../src/model.js';
 
 test('five waves end at 640 cards; no sixth wave can be created',()=>{
  assert.equal(MAX_WAVES,5);assert.deepEqual(WAVE_COUNTS,[64,128,240,400,640]);
  assert.equal(makeBoard(6).wave,5);assert.equal(makeBoard(6).total,640);
  assert.ok(SAW_DURATION>=800&&SAW_DURATION<1500);
 });
-test('four wind reactions use consistent thresholds and labels',()=>{
- assert.deepEqual([0,40,65,85].map(w=>windPresentation(w).reaction),['綿毛','傘','カツラ','雲']);
- assert.deepEqual([39,64,84,100].map(w=>windPresentation(w).tier),[0,1,2,3]);
+test('six wind reactions use consistent thresholds and labels',()=>{
+ assert.deepEqual([0,40,65,85,95,105].map(w=>windPresentation(w).reaction),['綿毛','傘','カツラ','雲','木々','天空の渦']);
+ assert.deepEqual([39,64,84,94,104,110].map(w=>windPresentation(w).tier),[0,1,2,3,4,5]);
 });
 test('descent slows before impact; the scene clock freezes during hit-stop',()=>{
  const fast=(impactFrame(140).flight-impactFrame(40).flight)/100;
@@ -33,4 +33,13 @@ test('eraser composites only its path at the selected width; all pen paths stay 
  assert.equal(JSON.stringify(strokes),before);assert.equal(ctx.globalCompositeOperation,'source-over');
  const d=createDesign();d.front.strokes=strokes;assert.equal(isDesign(d),true);
  d.front.strokes[1].tool='unknown';assert.equal(isDesign(d),false);
+});
+
+test('top wind tier is reachable with a legal thin large menko',()=>{
+ const d={...createDesign(),thickness:1,size:1};assert.ok(isDesign(d));
+ const shot=simulateShot(makeBoard(1),d,{x:.5,y:.55});
+ assert.equal(windPresentation(shot.wind).tier,5);
+ assert.equal(windDuration(shot.wind),5000);assert.equal(windDuration(shot.wind,true),950);
+ assert.match(windCaption(shot.wind,4000),/天空/);
+ assert.equal(windDuration(99),4200);assert.match(windCaption(99,3100),/大暴風/);
 });

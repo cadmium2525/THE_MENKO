@@ -76,7 +76,7 @@ function dust(ctx,w,h,x,y,t,foreground=false){
  }
 }
 function windReactions(ctx,w,h,t,wind){
- if(t<170||t>2100)return;
+ if(t<170||t>5000)return;
  const tier=windPresentation(wind).tier,p=clamp((t-170)/1700,0,1);
  // Four cumulative reactions, distinct from the shared impact sequence.
  for(let i=0;i<7;i++){
@@ -95,6 +95,13 @@ function windReactions(ctx,w,h,t,wind){
   const split=Math.sin(p*Math.PI)*w*.28;
   for(const direction of [-1,1]){ctx.save();ctx.translate(w*.5+direction*(split+w*.1),h*.22);ctx.fillStyle='#fffef5e8';for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(direction*i*26,Math.sin(i)*10,34,18,0,0,Math.PI*2);ctx.fill();}ctx.restore();}
   ctx.save();ctx.globalCompositeOperation='screen';glow(ctx,w*.5,h*.22,split+12,(1-p)*.5);ctx.restore();
+ }
+ if(tier>=4&&t>2700){
+  ctx.fillStyle='#819642';for(let i=0;i<24;i++){const a=t*.004+i*2.4;ctx.save();ctx.translate(w*.5+Math.cos(a)*w*.4,h*.5+Math.sin(a*.6)*h*.3);ctx.rotate(a);ctx.fillRect(-5,-2,10,4);ctx.restore();}
+ }
+ if(tier>=5&&t>3400){
+  ctx.strokeStyle='#fff4cd';ctx.lineWidth=3;const grow=clamp((t-3400)/800,0,1);
+  for(let i=0;i<12;i++){ctx.beginPath();ctx.ellipse(w*.5,h*(.18+i*.018),w*(.28-i*.017)*grow,8,t*.002+i*.05,0,Math.PI*1.85);ctx.stroke();}
  }
 }
 

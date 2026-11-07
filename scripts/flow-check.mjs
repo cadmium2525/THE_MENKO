@@ -33,7 +33,7 @@ tick(650);assert.equal(state.step,0);tick(1250);assert.equal(state.step,1);asser
 const shape=[[-.8,-.7],[.7,-.6],[.8,.7],[-.7,.8],[-.8,-.7]];
 draw(shape);assert.equal(state.design.kind,'custom');assert.equal(actions.get('craft-next').disabled,false);await action('shape-undo');assert.equal(state.design.kind,'uncut');assert.ok(actions.get('craft-next').disabled);draw(shape);await action('craft-next');assert.equal(state.step,2);
 draw([[-.7,0],[0,0],[.7,0]]);const pen=JSON.stringify(state.design.front.strokes[0]);await action('eraser');draw([[0,-.3],[0,0],[0,.3]]);assert.equal(state.design.front.strokes.length,2);assert.equal(state.design.front.strokes[1].tool,'eraser');assert.equal(JSON.stringify(state.design.front.strokes[0]),pen);tick(1300);await action('undo');assert.equal(state.design.front.strokes.length,1);
-await action('craft-next');await action('musou');await action('start');
+await action('craft-next');await action('musou');
 fire({x:.5,y:.55});tick(1600);assert.equal(state.impactPlayed,false);assert.equal(state.counter,0);tick(1800);assert.equal(state.impactPlayed,true);assert.equal(state.counter,0);finishShot();
 for(let wave=2;wave<=5;wave++){await action('next-wave');assert.equal(state.wave,wave);fire({x:.5,y:.55});finishShot();}
 assert.match(elements.get('screen').innerHTML,/5 WAVE 完走/);assert.equal(actions.has('next-wave'),false);assert.ok(actions.has('restart-run'));assert.equal(state.runScores.length,5);assert.equal(state.runTotal,state.runScores.reduce((a,b)=>a+b,0));

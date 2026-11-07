@@ -11,7 +11,7 @@ const errors=[];page.on('pageerror',e=>errors.push(String(e)));
 await mkdir('test-results',{recursive:true});
 const click=async a=>{await page.locator(`[data-action="${a}"]`).first().click();await page.waitForTimeout(280);};
 await page.goto(process.env.MENKO_TEST_URL||pathToFileURL(path.resolve('THE-MENKO.html')).href);
-await click('quick');await click('musou');await click('start');
+await click('quick');await click('musou');
 await page.waitForTimeout(300);
 const b=await page.locator('#arena').boundingBox();
 await page.touchscreen.tap(b.x+b.width*.5,b.y+b.height*.55);

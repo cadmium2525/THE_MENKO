@@ -43,12 +43,21 @@ function reset3(v,key,studio=false){
 function yard3(v){
  const rng=random(12);
  for(let i=-5;i<=5;i++){box3(v,'#cdbb8d',i*3,1.4,-15,.16,2.8,.16);box3(v,'#447769',i*3,1.1,-15,2.9,.13,.13);box3(v,'#447769',i*3,2.2,-15,2.9,.13,.13);}
- for(const x of [-7,7]){mesh3(v,new T.CylinderGeometry(.2,.3,3.8,7),'#795437',x,1.9,-13);for(let j=0;j<3;j++)ball3(v,['#4f7739','#719746','#8eab55'][j],x+(j-1)*1.1,4+j*.3,-13,1.7,1.8,1.4);}
- for(let i=0;i<9;i++){
-  const x=(i<5?-1:1)*(10+rng()*8),z=-9-rng()*15;
-  mesh3(v,new T.CylinderGeometry(.18,.32,4,7),'#795437',x,2,z);
-  for(let j=0;j<3;j++){const m=mesh3(v,new T.IcosahedronGeometry(2+rng(),1),['#527b36','#709640','#8ba64a'][j],x+(rng()-.5)*2,4+j,z);m.scale.y=.8;}
+ v.trees=[];
+ for(let i=0;i<11;i++){
+  const tree=new T.Group();v.scene.add(tree);v.trees.push(tree);
+  tree.position.set(i<2?(i?-7:7):(i<6?-1:1)*(10+rng()*8),0,i<2?-13:-9-rng()*15);
+  mesh3(v,new T.CylinderGeometry(.18,.32,4,7),'#795437',0,2,0,tree);
+  for(let j=0;j<3;j++){const m=mesh3(v,new T.IcosahedronGeometry(1.8+rng(),1),['#527b36','#709640','#8ba64a'][j],(j-1)*.9,4+j*.6,0,tree);m.scale.y=.85;}
  }
+ v.vortex=new T.Group();v.vortex.position.set(0,0,-13);v.scene.add(v.vortex);v.vortex.visible=false;v.vortexBands=[];
+ for(let i=0;i<12;i++){
+  const points=[];for(let n=0;n<=90;n++){const a=n/90*Math.PI*1.85,r=1.2+i*.25;points.push(new T.Vector3(Math.cos(a)*r,4+i*.4+Math.sin(a)*.15,Math.sin(a)*r));}
+  const band=new T.Mesh(resource3(v,new T.TubeGeometry(new T.CatmullRomCurve3(points),90,.065,5,false)),resource3(v,new T.MeshBasicMaterial({color:i%3?'#fff5cf':'#ffd068',transparent:true,opacity:.8})));v.vortex.add(band);v.vortexBands.push(band);
+ }
+ const mist=new T.InstancedMesh(resource3(v,new T.SphereGeometry(1,8,6)),resource3(v,new T.MeshStandardMaterial({color:'#e7f3ff',transparent:true,opacity:.3,depthWrite:false,roughness:1})),120),wisp=new T.Object3D();
+ for(let i=0;i<120;i++){const height=i/120*4.5,a=i*.48,r=1.15+height*.62;wisp.position.set(Math.cos(a)*r,4+height,Math.sin(a)*r);wisp.scale.set(.3+height*.05,.16+height*.025,.32);wisp.rotation.y=-a;wisp.updateMatrix();mist.setMatrixAt(i,wisp.matrix);}v.vortex.add(mist);
+ v.leaves=[];for(let i=0;i<28;i++){const leaf=mesh3(v,new T.OctahedronGeometry(.13,0),i%2?'#bd933a':'#74943b');leaf.scale.set(1,.22,1.6);leaf.visible=false;v.leaves.push(leaf);}
  for(let i=0;i<4;i++){const x=-13+i*9,z=-23-rng()*5;box3(v,i%2?'#ecdfbc':'#bed3cc',x,2.4,z,5,4.8,4);const roof=mesh3(v,new T.ConeGeometry(4.2,2,4),'#4e6975',x,5.5,z);roof.rotation.y=Math.PI/4;box3(v,'#55818d',x,2.5,z+2.02,2,1.5,.04);}
  // Small stones are instanced so terrain detail costs one draw call.
  const pebble=new T.InstancedMesh(resource3(v,new T.IcosahedronGeometry(1,0)),material3(v,'#8c7958'),180),dummy=new T.Object3D();
@@ -120,6 +129,10 @@ function animateWind3(v,t,wind,reduced){
  v.canopy.scale.y=tier>=1&&p>.12?-1:1;v.umbrella.rotation.z=tier>=1?Math.sin(p*Math.PI)*1.1:0;
  v.umbrella.position.y=tier>=1?Math.sin(p*Math.PI)*1.6:0;
  for(let i=0;i<v.seeds.length;i++){const s=v.seeds[i];s.visible=t>100;s.position.set(-4+i*.65+p*5,1+Math.sin(i)*.4+p*3,-.3+Math.cos(i)*.7);s.rotation.z=p*5+i;}
+ const gale=tier>=4?clamp((t-2700)/650,0,1):0;
+ v.trees.forEach((tree,i)=>{tree.rotation.z=gale*(.3+Math.sin(t*.008+i)*.1)*(tree.position.x<0?-1:1);});
+ v.leaves.forEach((leaf,i)=>{leaf.visible=gale>0;const a=t*.004+i*2.4;leaf.position.set(Math.cos(a)*(3+i%5),1+(i*.31+t*.002)%7,-9+Math.sin(a)*(2+i%4));leaf.rotation.set(a,a*2,i);});
+ const vortex=tier>=5?clamp((t-3400)/800,0,1):0;v.vortex.visible=vortex>0;v.vortex.scale.setScalar(.4+vortex*.6);v.scene.background.set('#86c4e7').lerp(new T.Color('#536b9b'),vortex*.7);v.scene.fog.color.copy(v.scene.background);v.vortexBands.forEach((band,i)=>{band.rotation.y=t*.0015*(1+i*.07);});
  const blown=tier>=2&&t>1100;
  v.wig.position.set(blown?-gag*3:0,2.53+(blown?Math.sin(gag*Math.PI*.8)*2.2:0),blown?gag*.4:0);
  v.wig.rotation.set(blown?gag*7:0,blown?gag*8:0,blown?gag*3:0);
@@ -164,6 +177,7 @@ export function arena3D(canvas,data){
   // The same continuous scene reveals the spectator reacting to the pressure wave.
   const cut=clamp((t-1250)/450,0,1),reaction=windPresentation(data.shot.wind).tier;
   if(cut>0&&reaction>=1){const center=new T.Vector3(v.stage.position.x+(reaction>=2?1.2:-1),reaction>=2?2.1:1.7,v.stage.position.z);camera.position.lerp(new T.Vector3(center.x+.6,3.9,center.z+9),cut);follow.lerp(center,cut);if(reaction>=3){const sky=clamp((t-2200)/800,0,1);follow.y+=sky*2.2;camera.position.y+=sky*.7;}camera.lookAt(follow);}
+  if(reaction>=4&&t>2900){const pan=clamp((t-2900)/650,0,1);camera.position.lerp(new T.Vector3(0,5.5,7),pan);const target=new T.Vector3(0,reaction>=5&&t>3400?6:3.8,-13);follow.lerp(target,pan);camera.lookAt(follow);}
   if(timing.landed&&t<300){camera.position.x+=Math.sin(t*.15)*.11*(1-t/300);camera.position.y+=Math.cos(t*.12)*.07*(1-t/300);}
  }
  renderCanvas3(v,canvas,camera);
