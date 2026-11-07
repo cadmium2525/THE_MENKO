@@ -119,7 +119,7 @@ function boardPoint3(p,aspect){return new T.Vector3((p.x-.5)*12,0,(p.y-.5)*12*as
 function buildBattle3(v,data,aspect){
  reset3(v,'battle');v.board=data.board;v.design=data.design;v.duel=data.duel?.defender;v.aspect=aspect;v.targetSignature=JSON.stringify(data.duel?.target);v.shot=null;
  const cards=data.duel?[{id:-1,...data.duel.target,angle:0,color:0}]:data.board.cards;
- for(const card of cards){const d=data.duel?data.duel.defender:{...homeDesign3[0],points:outline(card.id%7===0?'square':'circle'),thickness:3,front:{color:palette3[card.color],pattern:card.id%5,strokes:[]},back:{color:'#bba174',pattern:2,strokes:[]}};const m=card3(v,d,data.duel?12*.115*d.size/.8:(data.board.total>200?.27:.4),!!data.duel);const base=boardPoint3(card,aspect);m.position.copy(base);m.position.y=.025;m.rotation.y=card.angle;v.cards.push({card,mesh:m,base});}
+ for(const card of cards){const d=data.duel?data.duel.defender:{...homeDesign3[0],points:outline(card.id%7===0?'square':'circle'),thickness:3,front:{color:palette3[card.color],pattern:card.id%5,strokes:[]},back:{color:'#bba174',pattern:2,strokes:[]}};const m=card3(v,d,data.duel?12*.115*d.size/.8:(data.board.total>200?.27:.4),!!data.duel);const base=boardPoint3(card,aspect);m.position.copy(base);m.position.y=.025;m.scale.y*=1+Math.log2(card.weight||1)*.18;m.rotation.y=card.angle;v.cards.push({card,mesh:m,base});}
  v.player=card3(v,data.design,data.duel?12*.11*data.design.size/.8:1.45*data.design.size/.8);v.player.visible=false;
  v.aim=new T.Mesh(resource3(v,new T.RingGeometry(1.05,1.12,64)),resource3(v,new T.MeshBasicMaterial({color:'#ffecaa',transparent:true,opacity:.95,side:T.DoubleSide})));v.aim.rotation.x=-Math.PI/2;v.scene.add(v.aim);
  sceneParticles3(v);
@@ -149,7 +149,14 @@ export function arena3D(canvas,data){
  v.stage.position.set(-1,0,-6);
  v.top.left=-6;v.top.right=6;v.top.top=6*aspect;v.top.bottom=-6*aspect;v.top.updateProjectionMatrix();
  v.aim.visible=!data.shot;v.aim.position.copy(origin);v.aim.position.y=.04;
- if(data.shot!==v.shot){v.shot=data.shot;v.hits=new Map((data.shot?.cards||[]).map(c=>[c.id,c]));}
+ if(data.shot!==v.shot){
+  for(const item of v.cards.filter(item=>item.card.offscreen))v.scene.remove(item.mesh);
+  v.cards=v.cards.filter(item=>!item.card.offscreen);
+  v.shot=data.shot;v.hits=new Map((data.shot?.cards||[]).map(c=>[c.id,c]));
+  for(const card of (data.shot?.cards||[]).filter(c=>c.offscreen).slice(0,48)){
+   const d={...homeDesign3[0],thickness:3,front:{color:palette3[card.color],pattern:card.id%5,strokes:[]},back:{color:'#bba174',pattern:2,strokes:[]}},m=card3(v,d,.27,false),base=boardPoint3(card,aspect);m.scale.y*=1+Math.log2(card.weight)*.18;v.cards.push({card,mesh:m,base});
+  }
+ }
  v.player.visible=!!data.shot;
  for(const item of v.cards){
   const hit=data.duel?(data.shot?.flipped?{delay:0}:null):v.hits?.get(item.card.id);

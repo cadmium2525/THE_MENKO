@@ -1,13 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {impactFrame,paintInk,SAW_DURATION,windPresentation,windDuration,windCaption} from '../src/effects.js';
-import {MAX_WAVES,WAVE_COUNTS,makeBoard,createDesign,isDesign,simulateShot} from '../src/model.js';
+import {MAX_WAVES,makeBoard,createDesign,isDesign,simulateShot} from '../src/model.js';
 
-test('five waves end at 640 cards; no sixth wave can be created',()=>{
- assert.equal(MAX_WAVES,5);assert.deepEqual(WAVE_COUNTS,[64,128,240,400,640]);
- assert.equal(makeBoard(6).wave,5);assert.equal(makeBoard(6).total,640);
+test('five waves remain, without a fixed final-wave count',()=>{
+ assert.equal(MAX_WAVES,5);assert.equal(makeBoard(6,0,1).wave,5);
+ const totals=Array.from({length:40},(_,i)=>makeBoard(5,0,i).total);
+ assert.ok(totals.some(n=>n>640));assert.ok(new Set(totals).size>30);
  assert.ok(SAW_DURATION>=800&&SAW_DURATION<1500);
 });
+
 test('six wind reactions use consistent thresholds and labels',()=>{
  assert.deepEqual([0,40,65,85,95,105].map(w=>windPresentation(w).reaction),['綿毛','傘','カツラ','雲','木々','天空の渦']);
  assert.deepEqual([39,64,84,94,104,110].map(w=>windPresentation(w).tier),[0,1,2,3,4,5]);

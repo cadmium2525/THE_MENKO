@@ -10,6 +10,7 @@ const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,
 const errors=[];page.on('pageerror',e=>errors.push(String(e)));
 await mkdir('test-results',{recursive:true});
 const click=async a=>{await page.locator(`[data-action="${a}"]`).first().click();await page.waitForTimeout(280);};
+await page.addInitScript(()=>{const original=crypto.getRandomValues.bind(crypto);crypto.getRandomValues=a=>{if(a instanceof Uint32Array&&a.length===1){a[0]=3;return a;}return original(a);};});
 await page.goto(process.env.MENKO_TEST_URL||pathToFileURL(path.resolve('THE-MENKO.html')).href);
 await click('quick');await click('musou');
 await page.waitForTimeout(300);

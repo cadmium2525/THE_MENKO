@@ -8,10 +8,54 @@ export function sanitizeOutline(raw){let p=raw.filter(v=>Number.isFinite(v.x)&&N
 export function stats(d){const area=polygonArea(d.points)*d.size*d.size/Math.PI;const radii=d.points.map(p=>Math.hypot(p.x,p.y));const avg=radii.reduce((a,b)=>a+b,0)/radii.length;const variance=radii.reduce((a,b)=>a+(b-avg)**2,0)/radii.length;const cx=d.points.reduce((a,p)=>a+p.x,0)/d.points.length,cy=d.points.reduce((a,p)=>a+p.y,0)/d.points.length;const wild=clamp(Math.sqrt(variance)*2.8+Math.hypot(cx,cy),0,1);return {area,hit:clamp(24+d.thickness*6+(1-d.size)*38,0,100),wind:clamp(25+area*77-d.thickness*4,10,100),precision:clamp(106-d.size*20-wild*45,10,100),chain:clamp(25+wild*65+(10-d.thickness)*2,10,100),wild};}
 export const fields=[{name:'ひだまり広場',hint:'風が広がる、やわらかな紙',type:'breeze',color:'#dcba75'},{name:'石畳の路地',hint:'厚い一撃で、かたい紙を返せ',type:'heavy',color:'#b6b5a4'},{name:'すき間の庭',hint:'小さな一枚で、すき間を狙え',type:'precision',color:'#b9c4a3'},{name:'ぐるぐる横丁',hint:'いびつな形で、回転をつなげ',type:'chaos',color:'#c8b5a0'}];
 export function affinity(d,type){const s=stats(d);return type==='breeze'?s.wind/80:type==='heavy'?s.hit/85:type==='precision'?(1.35-d.size)*1.3+s.precision/240:0.4+s.chain/85;}
-export const WAVE_COUNTS = [64, 128, 240, 400, 640];
-export const MAX_WAVES = WAVE_COUNTS.length;
-export function makeBoard(wave=1,fieldIndex=0,seed=wave*71+fieldIndex){wave=clamp(Number.isFinite(wave)?Math.trunc(wave):1,1,MAX_WAVES);const rng=random(seed),total=WAVE_COUNTS[wave-1],n=Math.min(total,176),cols=8,rows=Math.ceil(n/cols);const cards=Array.from({length:n},(_,i)=>({id:i,x:0.105+(i%cols)*.112+(rng()-.5)*.05,y:.21+Math.floor(i/cols)/(rows-1||1)*.65+(rng()-.5)*.025,angle:(rng()-.5)*.9,color:i%5,weight:Math.floor(total/n)+(i<total%n?1:0),resistance:.52+rng()*.42,flipped:false}));return {wave,fieldIndex,total,cards,seed};}
-export function simulateShot(board,design,aim){const s=stats(design),rng=random(board.seed+Math.round(aim.x*1000)+Math.round(aim.y*1000)),factor=affinity(design,fields[board.fieldIndex].type),radius=.22+factor*.21+s.area*.025;const origin={x:clamp(aim.x+(rng()-.5)*s.wild*.06,.03,.97),y:clamp(aim.y+(rng()-.5)*s.wild*.06,.12,.94)};const result=[],energies=new Map();for(const card of board.cards){const dist=Math.hypot(card.x-origin.x,(card.y-origin.y)*1.35);const energy=Math.max(0,1-dist/radius)*(1.05+factor*.9)+(dist<.065?s.hit/65:0);if(energy>card.resistance){energies.set(card.id,energy);result.push({...card,delay:dist*1100,depth:1});}}let cursor=0;const seen=new Set(result.map(c=>c.id));while(cursor<result.length){const source=result[cursor++];if(source.depth>8)continue;for(const card of board.cards){if(seen.has(card.id))continue;const dist=Math.hypot(card.x-source.x,(card.y-source.y)*1.3);const reach=.125+s.chain/2000;const energy=energies.get(source.id)*(.59+factor*.2+(fields[board.fieldIndex].type==='chaos'?s.chain/650:.015));if(dist<reach&&energy>card.resistance*.72){seen.add(card.id);energies.set(card.id,energy);result.push({...card,delay:source.delay+105+dist*800,depth:source.depth+1});}}}result.sort((a,b)=>a.delay-b.delay);return{cards:result,count:result.reduce((a,c)=>a+c.weight,0),chain:Math.max(0,...result.map(c=>c.depth)),wind:s.wind*(.55+factor*.45),origin};}
+export const MAX_WAVES = 5;
+export function freshBoardSeed(){const bytes=new Uint32Array(1);if(globalThis.crypto?.getRandomValues){globalThis.crypto.getRandomValues(bytes);return bytes[0];}return Math.floor(Math.random()*4294967296);}
+export function makeBoard(wave=1,fieldIndex=0,seed=freshBoardSeed()){
+ wave=clamp(Number.isFinite(wave)?Math.trunc(wave):1,1,MAX_WAVES);
+ const rng=random(seed),total=Math.max(48,Math.round((55+wave*35)*Math.pow(1.55,wave-1)*(.65-Math.log(Math.max(Number.EPSILON,1-rng()))*.75))),n=Math.min(total,176);
+ // Unequal islands and open ground: the best landing point comes from the layout.
+ const hubs=[];for(let i=0;i<2+Math.floor(rng()*3);i++){
+  let hub;for(let attempt=0;attempt<40;attempt++){
+   hub={x:.14+rng()*.72,y:.32+rng()*.48,spread:.065+rng()*.075};
+   if(hubs.every(h=>Math.hypot(h.x-hub.x,(h.y-hub.y)*1.35)>.25))break;
+  }hubs.push(hub);
+ }
+ const cards=Array.from({length:n},(_,i)=>{
+  const hub=hubs[rng()<.6?0:1+Math.floor(rng()*(hubs.length-1))],a=rng()*Math.PI*2,r=Math.sqrt(rng())*hub.spread;
+  const scattered=rng()<.12;
+  return{id:i,x:scattered?.09+rng()*.82:clamp(hub.x+Math.cos(a)*r,.07,.93),y:scattered?.28+rng()*.56:clamp(hub.y+Math.sin(a)*r*.75,.27,.87),angle:rng()*Math.PI*2,color:i%5,weight:Math.floor(total/n)+(i<total%n?1:0),resistance:.52+rng()*.42,flipped:false};
+ });
+ return{wave,fieldIndex,total,cards,seed,hubs};
+}
+// The world continues beyond the viewport. Cells are generated only when a
+// live pressure chain reaches them; energy decay, not a score quota, ends it.
+export function outsideCell(board,tx,ty){
+ const zig=n=>n>=0?n*2:-n*2-1,a=zig(tx),b=zig(ty),cell=(a+b)*(a+b+1)/2+b;
+ const rng=random((board.seed^Math.imul(tx,73856093)^Math.imul(ty,19349663))>>>0);
+ const mean=Math.max(1,board.total/176)*(1+board.wave*.75);
+ return Array.from({length:64},(_,i)=>{let x=tx+.01+rng()*.98,y=ty+.01+rng()*.98;if(i<16&&ty===0&&Math.abs(tx)===1){x=tx<0?-.02:1.02;y=(i+.5)/16;}if(i<16&&tx===0&&Math.abs(ty)===1){y=ty<0?-.02:1.02;x=(i+.5)/16;}return{id:1000+cell*64+i,x,y,angle:rng()*Math.PI*2,color:i%5,weight:Math.max(1,Math.round(mean*(.4-Math.log(Math.max(Number.EPSILON,1-rng()))))),resistance:.52+rng()*.42,offscreen:true};});
+}
+export function simulateShot(board,design,aim){
+ const s=stats(design),rng=random(board.seed+Math.round(aim.x*1000)+Math.round(aim.y*1000)),factor=affinity(design,fields[board.fieldIndex].type),radius=.14+factor*.13+s.area*.015;
+ const origin={x:clamp(aim.x+(rng()-.5)*s.wild*.06,.03,.97),y:clamp(aim.y+(rng()-.5)*s.wild*.06,.12,.94)};
+ const result=[],energies=new Map(),cells=new Map(),seen=new Set();
+ const accept=(card,energy,delay,depth)=>{seen.add(card.id);energies.set(card.id,energy);result.push({...card,delay,depth});};
+ for(const card of board.cards){const dist=Math.hypot(card.x-origin.x,(card.y-origin.y)*1.35),energy=Math.max(0,1-dist/radius)*(1.05+factor*.9)+(dist<.065?s.hit/65:0);if(energy>card.resistance)accept(card,energy,dist*1100,1);}
+ const reach=.10+s.chain/2000,decay=Math.min(.9,.57+factor*.16+s.chain/1200);
+ let cursor=0;
+ while(cursor<result.length){
+  const source=result[cursor++],energy=energies.get(source.id)*decay;
+  if(energy<=.52*.72)continue;
+  const candidates=[...board.cards];
+  for(let x=Math.floor(source.x-reach);x<=Math.floor(source.x+reach);x++)for(let y=Math.floor(source.y-reach/1.3);y<=Math.floor(source.y+reach/1.3);y++){
+   if(x===0&&y===0)continue;const key=x+':'+y;if(!cells.has(key))cells.set(key,outsideCell(board,x,y));candidates.push(...cells.get(key));
+  }
+  for(const card of candidates){if(seen.has(card.id))continue;const dist=Math.hypot(card.x-source.x,(card.y-source.y)*1.3);if(dist<reach&&energy>card.resistance*.72)accept(card,energy,source.delay+105+dist*800,source.depth+1);}
+ }
+ result.sort((a,b)=>a.delay-b.delay);
+ const visibleCount=result.filter(c=>!c.offscreen).reduce((a,c)=>a+c.weight,0),offscreenCount=result.filter(c=>c.offscreen).reduce((a,c)=>a+c.weight,0);
+ return{cards:result,count:visibleCount+offscreenCount,visibleCount,offscreenCount,chain:Math.max(0,...result.map(c=>c.depth)),wind:s.wind*(.55+factor*.45),origin};
+}
 // Conservative outline footprints: overlapping paper pins the opponent down.
 export function duelSpacing(attacker,defender){return .11*attacker.size/.8*Math.max(...attacker.points.map(p=>Math.hypot(p.x,p.y)))+.115*defender.size/.8*Math.max(...defender.points.map(p=>Math.hypot(p.x,p.y)));}
 export function duelShot(attacker,defender,aim,target,fieldIndex=0,aspect=1.35){

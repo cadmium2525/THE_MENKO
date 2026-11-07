@@ -115,7 +115,7 @@ export function cinematicImpact(ctx,w,h,{board,design,shot,timing,duel},drawMenk
  if(timing.phase==='slow'){ctx.fillStyle='#271f181a';ctx.fillRect(0,0,w,h);}
  const hits=new Map(shot.cards.map(c=>[c.id,c]));
  let cards=duel?[{id:1,x:duel.target.x,y:duel.target.y,angle:.1,color:0}]:board.cards;
- // Keep bounded even on the 640-card wave; selection is tied to actual hits.
+ // Keep bounded even on very large waves; selection is tied to actual hits.
  const stride=Math.max(1,Math.ceil(cards.length/72));cards=cards.filter((c,i)=>i%stride===0||hits.has(c.id)&&i%3===0);
  const projected=cards.map(card=>{
   const depth=clamp(1.5+(shot.origin.y-card.y)*2.3,.65,2.8),scale=1.2/depth;
